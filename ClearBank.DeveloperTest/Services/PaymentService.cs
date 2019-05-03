@@ -1,91 +1,45 @@
-﻿using ClearBank.DeveloperTest.Data;
-using ClearBank.DeveloperTest.Types;
+﻿using System;
+using ClearBank.DeveloperTest.Data;
 using System.Configuration;
+using System.Threading;
+using System.Threading.Tasks;
+using ClearBank.DeveloperTest.Access;
+using ClearBank.DeveloperTest.Enums;
+using ClearBank.DeveloperTest.Interface;
+using ClearBank.DeveloperTest.Models;
 
 namespace ClearBank.DeveloperTest.Services
 {
     public class PaymentService : IPaymentService
     {
-        public MakePaymentResult MakePayment(MakePaymentRequest request)
+        private readonly IAccountAccess _accountAccess;
+        private readonly IValidationFactory _validationFactory;
+
+        public PaymentService(IAccountAccess accountAccess, IValidationFactory validationFactory)
         {
-            var dataStoreType = ConfigurationManager.AppSettings["DataStoreType"];
+            _accountAccess = accountAccess;
+            _validationFactory = validationFactory;
+        }
 
-            Account account = null;
+        public async Task<MakePaymentResult> MakePayment(MakePaymentRequest request, CancellationToken cancellationToken = default)
+        {
+            Account debtorAccount = await _accountAccess.GetAccount(request.DebtorAccountNumber, cancellationToken);
+            IValidator validator = _validationFactory.GetValidator(request.PaymentScheme);
 
-            if (dataStoreType == "Backup")
+            bool valid = validator.ValidatePayment(debtorAccount, request.Amount);
+
+            if (valid)
             {
-                var accountDataStore = new BackupAccountDataStore();
-                account = accountDataStore.GetAccount(request.DebtorAccountNumber);
-            }
-            else
-            {
-                var accountDataStore = new AccountDataStore();
-                account = accountDataStore.GetAccount(request.DebtorAccountNumber);
-            }
+                Account creditorAccount = await _accountAccess.GetAccount(request.CreditorAccountNumber, cancellationToken);
 
-            var result = new MakePaymentResult();
+                debtorAccount.Balance -= request.Amount;
+                creditorAccount.Balance += request.Amount;
 
-            switch (request.PaymentScheme)
-            {
-                case PaymentScheme.Bacs:
-                    if (account == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs))
-                    {
-                        result.Success = false;
-                    }
-                    break;
-
-                case PaymentScheme.FasterPayments:
-                    if (account == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments))
-                    {
-                        result.Success = false;
-                    }
-                    else if (account.Balance < request.Amount)
-                    {
-                        result.Success = false;
-                    }
-                    break;
-
-                case PaymentScheme.Chaps:
-                    if (account == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps))
-                    {
-                        result.Success = false;
-                    }
-                    else if (account.Status != AccountStatus.Live)
-                    {
-                        result.Success = false;
-                    }
-                    break;
+                await _accountAccess.UpdateAccount(debtorAccount, cancellationToken);
+                await _accountAccess.UpdateAccount(creditorAccount, cancellationToken);
             }
 
-            if (result.Success)
-            {
-                account.Balance -= request.Amount;
-
-                if (dataStoreType == "Backup")
-                {
-                    var accountDataStore = new BackupAccountDataStore();
-                    accountDataStore.UpdateAccount(account);
-                }
-                else
-                {
-                    var accountDataStore = new AccountDataStore();
-                    accountDataStore.UpdateAccount(account);
-                }
-            }
-
-            return result;
+            return new MakePaymentResult {Success = valid};
         }
     }
 }
