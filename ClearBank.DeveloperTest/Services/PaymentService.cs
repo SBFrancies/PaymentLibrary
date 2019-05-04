@@ -25,7 +25,6 @@ namespace ClearBank.DeveloperTest.Services
         {
             Account debtorAccount = await _accountAccess.GetAccount(request.DebtorAccountNumber, cancellationToken);
             IValidator validator = _validationFactory.GetValidator(request.PaymentScheme);
-
             bool valid = validator.ValidatePayment(debtorAccount, request.Amount);
 
             if (valid)
