@@ -82,9 +82,7 @@
     <Compile Include="ValidationTests\FasterPaymentValidatorTests.cs" />
     <Compile Include="ValidationTests\ValidationFactoryTests.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="AccessTests\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
