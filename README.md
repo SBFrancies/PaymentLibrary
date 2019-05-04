@@ -26,3 +26,5 @@ This project contains the unit tests.
 
 3) Add error handling logic including rolling back a transaction if it fails part way through
 
+4) Redevelop in .Net Core
+
