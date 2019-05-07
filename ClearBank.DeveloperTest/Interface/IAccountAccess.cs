@@ -10,8 +10,8 @@ namespace ClearBank.DeveloperTest.Interface
 {
     public interface IAccountAccess
     {
-        Task<Account> GetAccount(string accountNumber, CancellationToken cancellationToken = default);
+        Account GetAccount(string accountNumber);
 
-        Task UpdateAccount(Account account, CancellationToken cancellationToken = default);
+        void UpdateAccount(Account account);
     }
 }

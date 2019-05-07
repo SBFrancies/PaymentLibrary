@@ -6,6 +6,6 @@ namespace ClearBank.DeveloperTest.Interface
 {
     public interface IPaymentService
     {
-        Task<MakePaymentResult> MakePayment(MakePaymentRequest request, CancellationToken cancellationToken = default);
+        MakePaymentResult MakePayment(MakePaymentRequest request);
     }
 }

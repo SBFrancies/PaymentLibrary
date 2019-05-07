@@ -22,9 +22,13 @@ This project contains the unit tests.
 
 1) Add StyleCop or some other static code analysis tool
 
-3) Add unit tests for the EF access classes
+2) Add unit tests for the EF access classes
 
 3) Add error handling logic including rolling back a transaction if it fails part way through
 
-4) Redevelop in .Net Core
+4) Make code asynchronous and add cancellation support
+
+5) Add transaction to credit creditor account
+
+6) Redevelop in .Net Core
 

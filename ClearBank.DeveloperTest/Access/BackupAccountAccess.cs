@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Entity;
 using System.Data.Entity.Core.Mapping;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ClearBank.DeveloperTest.Data;
@@ -19,18 +20,18 @@ namespace ClearBank.DeveloperTest.Access
             _dbContextFactory = dbContextFactory;
         }
 
-        public async Task<Account> GetAccount(string accountNumber, CancellationToken cancellationToken = default )
+        public Account GetAccount(string accountNumber)
         {
             using (AccountDbContext context = _dbContextFactory())
             {
-                BackupAccountEntity entity = await
-                    context.BackUpAccounts.SingleOrDefaultAsync(a => a.AccountNumber == accountNumber, cancellationToken);
+                BackupAccountEntity entity =
+                    context.BackUpAccounts.SingleOrDefault(a => a.AccountNumber == accountNumber);
 
                 return MapEntityToAccount(entity);
             }
         }
 
-        public async Task UpdateAccount(Account account, CancellationToken cancellationToken = default)
+        public void UpdateAccount(Account account)
         {
             if (account == null)
             {
@@ -39,8 +40,8 @@ namespace ClearBank.DeveloperTest.Access
 
             using (AccountDbContext context = _dbContextFactory())
             {
-                AccountEntity entity = await
-                    context.BackUpAccounts.SingleOrDefaultAsync(a => a.AccountNumber == account.AccountNumber, cancellationToken);
+                AccountEntity entity =
+                    context.BackUpAccounts.SingleOrDefault(a => a.AccountNumber == account.AccountNumber);
 
                 if (entity == null)
                 {
@@ -51,7 +52,7 @@ namespace ClearBank.DeveloperTest.Access
                 entity.Status = account.Status;
                 entity.AllowedPaymentSchemes = account.AllowedPaymentSchemes;
 
-                await context.SaveChangesAsync(cancellationToken);
+                context.SaveChanges();
             }
         }
 

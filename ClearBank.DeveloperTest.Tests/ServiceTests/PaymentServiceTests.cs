@@ -28,39 +28,37 @@ namespace ClearBank.DeveloperTest.Tests.ServiceTests
         }
 
         [Fact]
-        public async Task WhenValidatorReturnsFalseResultIsFalse()
+        public void WhenValidatorReturnsFalseResultIsFalse()
         {
             _mockValidator.Setup(a => a.ValidatePayment(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(false);
 
             PaymentService sut = GetSystemUnderTest();
 
-            MakePaymentResult result = await sut.MakePayment(_paymentRequest);
+            MakePaymentResult result = sut.MakePayment(_paymentRequest);
 
-            _mockAccountAccess.Verify(a => a.GetAccount(_paymentRequest.DebtorAccountNumber, It.IsAny<CancellationToken>()), Times.Once);
-            _mockAccountAccess.Verify(a => a.GetAccount(_paymentRequest.CreditorAccountNumber, It.IsAny<CancellationToken>()), Times.Never);
-            _mockAccountAccess.Verify(a => a.UpdateAccount(It.IsAny<Account>(), It.IsAny<CancellationToken>()), Times.Never);
+            _mockAccountAccess.Verify(a => a.GetAccount(_paymentRequest.DebtorAccountNumber), Times.Once);
+            _mockAccountAccess.Verify(a => a.UpdateAccount(It.IsAny<Account>()), Times.Never);
 
             Assert.False(result.Success);
         }
 
         [Fact]
-        public async Task WhenValidatorReturnsTrueResultIsTrue()
+        public void WhenValidatorReturnsTrueResultIsTrue()
         {
             _mockValidator.Setup(a => a.ValidatePayment(It.IsAny<Account>(), It.IsAny<decimal>())).Returns(true);
             _mockAccountAccess
-                .Setup(a => a.GetAccount(_paymentRequest.DebtorAccountNumber, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(_fixture.Create<Account>());
+                .Setup(a => a.GetAccount(_paymentRequest.DebtorAccountNumber))
+                .Returns(_fixture.Create<Account>());
             _mockAccountAccess
-                .Setup(a => a.GetAccount(_paymentRequest.CreditorAccountNumber, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(_fixture.Create<Account>());
+                .Setup(a => a.GetAccount(_paymentRequest.CreditorAccountNumber))
+                .Returns(_fixture.Create<Account>());
 
             PaymentService sut = GetSystemUnderTest();
 
-            MakePaymentResult result = await sut.MakePayment(_paymentRequest);
+            MakePaymentResult result =  sut.MakePayment(_paymentRequest);
 
-            _mockAccountAccess.Verify(a => a.GetAccount(_paymentRequest.DebtorAccountNumber, It.IsAny<CancellationToken>()), Times.Once);
-            _mockAccountAccess.Verify(a => a.GetAccount(_paymentRequest.CreditorAccountNumber, It.IsAny<CancellationToken>()), Times.Once);
-            _mockAccountAccess.Verify(a => a.UpdateAccount(It.IsAny<Account>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            _mockAccountAccess.Verify(a => a.GetAccount(_paymentRequest.DebtorAccountNumber), Times.Once);
+            _mockAccountAccess.Verify(a => a.UpdateAccount(It.IsAny<Account>()), Times.Once);
 
             Assert.True(result.Success);
         }
